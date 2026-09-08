@@ -28,8 +28,10 @@ public partial class MainWindow
             var entry = result.Entries[i];
 
             Debug.WriteLine(
-                $"{i} | Parent={entry.ParentIndex} | " +
-                $"{entry.Name} | {entry.Size} | " +
+                $"{i} | " +
+                $"Parent={entry.ParentIndex} | " +
+                $"{entry.Name} | " +
+                $"{entry.Size} bytes | " +
                 $"Directory={entry.IsDirectory}"
             );
         }

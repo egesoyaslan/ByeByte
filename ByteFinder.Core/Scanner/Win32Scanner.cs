@@ -7,6 +7,7 @@ namespace ByteFinder.Core.Scanner;
 
 public class Win32Scanner
 {
+    // Same performance improvement can be done on this method as well.
     public ScanResult ScanDirectory(string path)
     {
         var result = new ScanResult();
@@ -20,13 +21,50 @@ public class Win32Scanner
 
         const int rootIndex = 0;
         
-        ScanSingleDirectory(path, rootIndex, result);
+        var rootSize = ScanDirectoryContents(path, rootIndex, result);
+
+        result.Entries[rootIndex] = result.Entries[rootIndex] with
+        {
+            Size = rootSize
+        };
         
         return result;
     }
 
-    private void ScanSingleDirectory(string path, int parentIndex, ScanResult result)
+    // POSSIBLE PERFORMANCE IMPROVEMENT: This method creates copies of each FileEntry with the calculated size.
+    // Since FileEntry is a record struct we cannot change the size property directly.
+    private long ScanDirectoryContents(string path, int parentIndex, ScanResult result)
     {
+        var childDirectories = 
+            ScanSingleDirectory(path, parentIndex, result, out var nonDirectorySize);
+        
+        var totalSize = nonDirectorySize;
+
+        foreach (var child in childDirectories)
+        {
+            long childSize = ScanDirectoryContents(child.Path, child.Index, result);
+
+            result.Entries[child.Index] = result.Entries[child.Index] with
+            {
+                Size = childSize
+            };
+            
+            totalSize += childSize;
+        }
+        
+        return totalSize;
+    }
+
+    private List<(string Path, int Index)> ScanSingleDirectory(
+        string path, 
+        int parentIndex, 
+        ScanResult result,
+        out long nonDirectorySize)
+    {
+        nonDirectorySize = 0;
+        
+        var childDirectories = new List<(string Path, int Index)>();
+        
         // Results in (Drive Letter)/Path/* so everything in path can be name matched.
         string searchPath = Path.Combine(path, "*");
         
@@ -42,9 +80,12 @@ public class Win32Scanner
         {
             int errorCode = Marshal.GetLastWin32Error();
 
-            // This is the file not found error so we return from here.
-            if (errorCode == 2)
-                return;
+            // These are the native error codes of windows: 
+            // 2 = ERROR_FILE_NOT_FOUND
+            // 3 = ERROR_PATH_NOT_FOUND
+            // 5 = ERROR_ACCESS_DENIED
+            if (errorCode is 2 or 3 or 5)
+                return childDirectories;
             
             throw new Win32Exception(errorCode);
         }
@@ -66,12 +107,31 @@ public class Win32Scanner
                 // FileSizeHigh and FileSizeLow are just 64 bit size data divided in two. High is 0 unless necessary.
                 : ((long)data.FileSizeHigh << 32) | data.FileSizeLow;
 
+            int entryIndex = result.Entries.Count;
+
             result.Entries.Add(new FileEntry(
                 ParentIndex: parentIndex,
                 Name: name,
                 Size: size,
                 Attributes: data.FileAttributes));
+
+            if (isDirectory)
+            {
+                // ReparsePoint files can also be detected as directories so this prevents that.
+                bool isReparsePoint = (data.FileAttributes & FileAttributes.ReparsePoint) != 0;
+
+                if (!isReparsePoint)
+                {
+                    childDirectories.Add((Path.Combine(path, name), entryIndex));
+                }
+            }
+            else
+            {
+                nonDirectorySize += size;
+            }
         }
         while (NativeMethods.FindNextFile(handle, out data));
+        
+        return childDirectories;
     }
 }
