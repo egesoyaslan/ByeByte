@@ -12,4 +12,8 @@
       <ProjectReference Include="..\ByteFinder.Core\ByteFinder.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Fonts\" />
+    </ItemGroup>
+
 </Project>
