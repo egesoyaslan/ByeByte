@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ByteFinder.App"
         mc:Ignorable="d"
-        FontFamily="Bahnschrift"
+        FontFamily="Segoe UI"
         FontSize="14"
-        Title="ByteFinder"
+        Title="ByeByte"
         Width="1100"
         Height="720"
         MinWidth="850"
@@ -17,6 +17,55 @@
         AllowsTransparency="True"
         Background="Transparent"
         ResizeMode="CanResize">
+    <Window.Resources>
+        <Style x:Key="CloseButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBackground"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="0,16,0,0">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ButtonBackground"
+                                        Property="Background"
+                                        Value="#B3E81123"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="TitleBarButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBackground"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBackground"
+                                        Property="Background"
+                                        Value="#33FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     
     <Border Background="#CC000000" CornerRadius="16">
         <Grid>
@@ -26,10 +75,52 @@
             </Grid.RowDefinitions>
             
             <Border Grid.Row="0" Background="#FF111111" CornerRadius="16,16,0,0">
-                <TextBlock Text="ByteFinder" 
-                           Foreground="White" 
-                           Margin="16,0"
-                           VerticalAlignment="Center"/>
+                <Grid>
+                    <TextBlock Text="ByeByte" 
+                               Foreground="White" 
+                               Margin="16,0"
+                               VerticalAlignment="Center"/>
+                    
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Right" 
+                                VerticalAlignment="Stretch">
+                        <Button Style="{StaticResource TitleBarButton}" 
+                                Width="40" 
+                                Background="Transparent" 
+                                BorderThickness="0">
+                            <TextBlock FontFamily="Segoe Fluent Icons"
+                                       FontSize="8"
+                                       Text="&#xE921;" 
+                                       Foreground="White"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </Button>
+                        
+                        <Button Style="{StaticResource TitleBarButton}" 
+                                Width="40" 
+                                Background="Transparent" 
+                                BorderThickness="0">
+                            <TextBlock FontFamily="Segoe Fluent Icons"
+                                       FontSize="8"
+                                       Text="&#xE922;" 
+                                       Foreground="White"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </Button>
+                        
+                        <Button Style="{StaticResource CloseButton}" 
+                                Width="40" 
+                                Background="Transparent" 
+                                BorderThickness="0">
+                            <TextBlock FontFamily="Segoe Fluent Icons"
+                                       FontSize="8"
+                                       Text="&#xE8BB;" 
+                                       Foreground="White"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
             </Border>
         </Grid>
     </Border>
