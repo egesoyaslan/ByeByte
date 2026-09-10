@@ -7,6 +7,35 @@ namespace ByteFinder.Core.Scanner;
 
 public class Win32Scanner
 {
+    public IReadOnlyList<DriveDetails> GetReadyDrives()
+    {
+        var drives = new List<DriveDetails>();
+
+        foreach (var drive in DriveInfo.GetDrives())
+        {
+            try
+            {
+                if (!drive.IsReady)
+                    continue;
+
+                string rootPath = drive.RootDirectory.FullName;
+                string name = string.IsNullOrWhiteSpace(drive.VolumeLabel)
+                    ? rootPath
+                    : drive.VolumeLabel;
+
+                drives.Add(new DriveDetails(
+                    Name: name,
+                    RootPath: rootPath,
+                    TotalSize: drive.TotalSize,
+                    AvailableFreeSpace: drive.AvailableFreeSpace));
+            }
+            catch (IOException) {}
+            catch (UnauthorizedAccessException) {}
+        }
+
+        return drives;
+    }
+
     // Same performance improvement can be done on this method as well.
     public ScanResult ScanDirectory(string path)
     {
