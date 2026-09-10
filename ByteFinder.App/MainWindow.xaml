@@ -15,7 +15,8 @@
                  Background="Transparent"
                  WindowBackdropType="Acrylic"
                  ExtendsContentIntoTitleBar="True"
-                 StateChanged="Window_OnStateChanged">
+                 StateChanged="Window_OnStateChanged"
+                 Foreground="#FFF2F2F2">
     <Window.Resources>
         <Style x:Key="CloseButton" TargetType="Button">
             <Setter Property="Template">
@@ -69,10 +70,17 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="5*"/>
+            </Grid.ColumnDefinitions>
+            
             <Border Grid.Row="0"
+                    Grid.ColumnSpan="2"
                     Background="#FF111111"
                     MouseLeftButtonDown="TitleBar_OnMouseLeftButtonDown">
                 <Grid>
@@ -121,6 +129,43 @@
                                        HorizontalAlignment="Center"/>
                         </Button>
                     </StackPanel>
+                </Grid>
+            </Border>
+            
+            <Border Grid.Row="1"
+                    Grid.Column="0"
+                    Background="#FF111111"
+                    Height="45"
+                    Margin="12"
+                    CornerRadius="8"
+                    Padding="8"
+                    BorderThickness="1"
+                    BorderBrush="#FF3A3A3A">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <ui:DropDownButton Grid.Column="0"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       BorderThickness="1"
+                                       BorderBrush="#FF3A3A3A">
+                        
+                    </ui:DropDownButton>
+                    <ui:Button Grid.Column="1"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            Margin="8,0,0,0"
+                            CornerRadius="4"
+                            BorderThickness="1"
+                            BorderBrush="#FF3A3A3A">
+                        <TextBlock VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Text="Scan"
+                                   FontSize="12"/>
+                    </ui:Button>
                 </Grid>
             </Border>
         </Grid>
