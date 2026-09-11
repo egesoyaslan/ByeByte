@@ -1,4 +1,3 @@
-﻿using System.Diagnostics;
 using ByteFinder.Core.Scanner;
 using ByteFinder.Core.Types;
 using System.Windows.Controls;
@@ -11,36 +10,15 @@ namespace ByteFinder.App;
 /// </summary>
 public partial class MainWindow
 {
+    private readonly Win32Scanner _scanner = new();
     private DriveDetails? _selectedDrive;
+    private double _scanPercentage;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        var scanner = new Win32Scanner();
-
-        PopulateDriveMenu(scanner.GetReadyDrives());
-
-        string path = Path.Combine(
-            Environment.GetFolderPath(
-                Environment.SpecialFolder.UserProfile),
-            "Downloads"
-        );
-
-        var result = scanner.ScanDirectory(path);
-
-        for (int i = 0; i < result.Entries.Count; i++)
-        {
-            var entry = result.Entries[i];
-
-            Debug.WriteLine(
-                $"{i} | " +
-                $"Parent={entry.ParentIndex} | " +
-                $"{entry.Name} | " +
-                $"{entry.Size} bytes | " +
-                $"Directory={entry.IsDirectory}"
-            );
-        }
+        PopulateDriveMenu(_scanner.GetReadyDrives());
     }
 
     private void TitleBar_OnMouseLeftButtonDown(
@@ -166,5 +144,51 @@ public partial class MainWindow
         return total == 0
             ? 0
             : (int)Math.Round((double)value / total * 100);
+    }
+
+    private void SetScanPercentage(double percentage)
+    {
+        _scanPercentage = Math.Clamp(percentage, 0, 100);
+        ScanProgressBar.Width = DriveDropDownButton.ActualWidth * _scanPercentage / 100;
+    }
+
+    private void DriveDropDownButton_OnSizeChanged(
+        object sender,
+        System.Windows.SizeChangedEventArgs e)
+    {
+        SetScanPercentage(_scanPercentage);
+    }
+
+    private async void ScanButton_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (_selectedDrive is not { } drive)
+        {
+            return;
+        }
+
+        long usedSpace = drive.TotalSize - drive.AvailableFreeSpace;
+        var progress = new Progress<long>(scannedBytes =>
+        {
+            double percentage = usedSpace == 0
+                ? 0
+                : scannedBytes * 100d / usedSpace;
+
+            SetScanPercentage(percentage);
+        });
+
+        DriveDropDownButton.IsEnabled = false;
+        ScanButton.IsEnabled = false;
+        SetScanPercentage(0);
+
+        try
+        {
+            await Task.Run(() => _scanner.ScanDirectory(drive.RootPath, progress));
+            SetScanPercentage(100);
+        }
+        finally
+        {
+            DriveDropDownButton.IsEnabled = true;
+            ScanButton.IsEnabled = true;
+        }
     }
 }

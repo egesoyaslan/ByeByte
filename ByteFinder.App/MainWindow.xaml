@@ -145,20 +145,30 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="80"/>
                     </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <Border x:Name="ScanProgressBar"
+                                     IsHitTestVisible="False"
+                                     Background="#8032CD6A"
+                                     VerticalAlignment="Stretch"
+                                     HorizontalAlignment="Left"
+                                     CornerRadius="6"/>
+                        
+                        <ui:DropDownButton x:Name="DriveDropDownButton"
+                                           SizeChanged="DriveDropDownButton_OnSizeChanged"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Stretch"
+                                           BorderThickness="1"
+                                           BorderBrush="#FF3A3A3A"
+                                           HorizontalContentAlignment="Stretch"
+                                           VerticalContentAlignment="Center">
+                            <ui:DropDownButton.Flyout>
+                                <ContextMenu x:Name="DriveMenu" />
+                            </ui:DropDownButton.Flyout>
+                        </ui:DropDownButton>
+                    </Grid>
                     
-                    <ui:DropDownButton x:Name="DriveDropDownButton"
-                                       Grid.Column="0"
-                                       HorizontalAlignment="Stretch"
-                                       VerticalAlignment="Stretch"
-                                       BorderThickness="1"
-                                       BorderBrush="#FF3A3A3A"
-                                       HorizontalContentAlignment="Stretch"
-                                       VerticalContentAlignment="Center">
-                        <ui:DropDownButton.Flyout>
-                            <ContextMenu x:Name="DriveMenu" />
-                        </ui:DropDownButton.Flyout>
-                    </ui:DropDownButton>
-                    <ui:Button Grid.Column="1"
+                    <ui:Button x:Name="ScanButton"
+                            Grid.Column="1"
                             VerticalAlignment="Stretch"
                             HorizontalAlignment="Stretch"
                             Margin="8,0,0,0"
@@ -168,7 +178,8 @@
                             PressedBackground="#08FFFFFF"
                             PressedBorderBrush="#FF3A3A3A"
                             MouseOverBorderBrush="#FF3A3A3A"
-                            MouseOverBackground="#15FFFFFF">
+                            MouseOverBackground="#15FFFFFF"
+                            Click="ScanButton_OnClick">
                         <TextBlock VerticalAlignment="Center"
                                    HorizontalAlignment="Center"
                                    Text="Scan"
