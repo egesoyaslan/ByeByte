@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 using ByteFinder.Core.Types;
 using ByteFinder.Core.Scanner.Win32;
 
@@ -37,9 +38,12 @@ public class Win32Scanner
     }
 
     // Same performance improvement can be done on this method as well.
-    public ScanResult ScanDirectory(string path)
+    public ScanResult ScanDirectory(string path, IProgress<long>? progress = null)
     {
         var result = new ScanResult();
+        long scannedBytes = 0;
+        long lastReportedBytes = 0;
+        var progressTimer = Stopwatch.StartNew();
         
         result.Entries.Add(
             new FileEntry(
@@ -50,28 +54,59 @@ public class Win32Scanner
 
         const int rootIndex = 0;
         
-        var rootSize = ScanDirectoryContents(path, rootIndex, result);
+        var rootSize = ScanDirectoryContents(
+            path,
+            rootIndex,
+            result,
+            progress,
+            ref scannedBytes,
+            ref lastReportedBytes,
+            progressTimer);
 
         result.Entries[rootIndex] = result.Entries[rootIndex] with
         {
             Size = rootSize
         };
+
+        progress?.Report(scannedBytes);
         
         return result;
     }
 
     // POSSIBLE PERFORMANCE IMPROVEMENT: This method creates copies of each FileEntry with the calculated size.
     // Since FileEntry is a record struct we cannot change the size property directly.
-    private long ScanDirectoryContents(string path, int parentIndex, ScanResult result)
+    private long ScanDirectoryContents(
+        string path,
+        int parentIndex,
+        ScanResult result,
+        IProgress<long>? progress,
+        ref long scannedBytes,
+        ref long lastReportedBytes,
+        Stopwatch progressTimer)
     {
         var childDirectories = 
-            ScanSingleDirectory(path, parentIndex, result, out var nonDirectorySize);
+            ScanSingleDirectory(
+                path,
+                parentIndex,
+                result,
+                out var nonDirectorySize,
+                progress,
+                ref scannedBytes,
+                ref lastReportedBytes,
+                progressTimer);
         
         var totalSize = nonDirectorySize;
 
         foreach (var child in childDirectories)
         {
-            long childSize = ScanDirectoryContents(child.Path, child.Index, result);
+            long childSize = ScanDirectoryContents(
+                child.Path,
+                child.Index,
+                result,
+                progress,
+                ref scannedBytes,
+                ref lastReportedBytes,
+                progressTimer);
 
             result.Entries[child.Index] = result.Entries[child.Index] with
             {
@@ -88,7 +123,11 @@ public class Win32Scanner
         string path, 
         int parentIndex, 
         ScanResult result,
-        out long nonDirectorySize)
+        out long nonDirectorySize,
+        IProgress<long>? progress,
+        ref long scannedBytes,
+        ref long lastReportedBytes,
+        Stopwatch progressTimer)
     {
         nonDirectorySize = 0;
         
@@ -157,6 +196,16 @@ public class Win32Scanner
             else
             {
                 nonDirectorySize += size;
+                scannedBytes += size;
+
+                if (progress is not null &&
+                    (scannedBytes - lastReportedBytes >= 4 * 1024 * 1024 ||
+                     progressTimer.ElapsedMilliseconds >= 100))
+                {
+                    progress.Report(scannedBytes);
+                    lastReportedBytes = scannedBytes;
+                    progressTimer.Restart();
+                }
             }
         }
         while (NativeMethods.FindNextFile(handle, out data));
