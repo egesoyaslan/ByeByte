@@ -288,18 +288,134 @@
                         Background="#A0111111"
                         Margin="12,0,12,12"
                         CornerRadius="8"
-                        Padding="14,8,8,8"
+                        Padding="8,0,8,8"
                         BorderThickness="1"
                         BorderBrush="#E0454545">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="35"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FFF2F2F2"
+                                   Text="Name"
+                                   Margin="4,0,0,0"/>
+                        <Border Grid.Row="0"
+                                Grid.Column="0"
+                                Width="1"
+                                Height="35"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="#A0454545"/>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="1"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FFF2F2F2"
+                                   Text="Size"
+                                   Margin="12,0,0,0"/>
+                        <Border Grid.Row="0"
+                                Grid.Column="1"
+                                Width="1"
+                                Height="35"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="#A0454545"/>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="2"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FFF2F2F2"
+                                   Text="% Occupied"
+                                   Margin="12,0,0,0"/>
+                        <Border Grid.Row="0"
+                                Grid.Column="2"
+                                Width="1"
+                                Height="35"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="#A0454545"/>
+                        
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="3"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FFF2F2F2"
+                                   Text="Extension"
+                                   Margin="12,0,0,0"/>
+                        
+                        <Border Grid.Row="1"
+                                Grid.ColumnSpan="4"
+                                Grid.Column="0"
+                                Height="1"
+                                Background="#E0454545"/>
+                        
+                        <Border Grid.Row="2"
+                                Grid.Column="0"
+                                Width="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch"
+                                Background="#E0454545"
+                                Margin="0,24,0,16"/>
+                        
+                        <Border Grid.Row="2"
+                                Grid.Column="1"
+                                Width="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch"
+                                Background="#E0454545"
+                                Margin="0,24,0,16"/>
+                        
+                        <Border Grid.Row="2"
+                                Grid.Column="2"
+                                Width="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Stretch"
+                                Background="#E0454545"
+                                Margin="0,24,0,16"/>
+                    </Grid>
                 </Border>
                 
                 <Border Grid.Column="1"
                         Background="#A0111111"
                         Margin="0,0,12,12"
                         CornerRadius="8"
-                        Padding="14,8,8,8"
+                        Padding="8,0,8,0"
                         BorderThickness="1"
                         BorderBrush="#E0454545">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="35"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FFF2F2F2"
+                                   Text="Properties"
+                                   Margin="4,0,0,0"/>
+                        
+                        <Border Grid.Row="1"
+                                Grid.Column="0"
+                                Height="1"
+                                Background="#E0454545"/>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>
