@@ -1,5 +1,6 @@
 using ByteFinder.Core.Scanner;
 using ByteFinder.Core.Types;
+using ByteFinder.App.Types;
 using System.Windows.Controls;
 using System.IO;
 
@@ -11,8 +12,10 @@ namespace ByteFinder.App;
 public partial class MainWindow
 {
     private readonly Win32Scanner _scanner = new();
+    private IReadOnlyList<DriveDetails> _drives = [];
     private DriveDetails? _selectedDrive;
-    private double _scanPercentage;
+    private string? _selectedScanPath;
+    private bool _isFolderScan;
 
     public MainWindow()
     {
@@ -70,11 +73,12 @@ public partial class MainWindow
 
     private void PopulateDriveMenu(IReadOnlyList<DriveDetails> drives)
     {
+        _drives = drives;
         string? systemDrivePath = Path.GetPathRoot(Environment.SystemDirectory);
 
         foreach (var drive in drives)
         {
-            var item = new MenuItem
+            var item = new MenuItem // MenuItem is a XAML element that is the item in a dropdown menu. It comes with System.Windows.Controls.
             {
                 Header = GetDriveDisplayName(drive),
                 Tag = drive
@@ -82,18 +86,30 @@ public partial class MainWindow
 
             item.Click += DriveMenuItem_OnClick;
             DriveMenu.Items.Add(item);
-
+            
+            // This checks if the drive added to the dropdown menu is the system drive. If it is the system drive is selected as default.
             if (string.Equals(drive.RootPath, systemDrivePath,
                     StringComparison.OrdinalIgnoreCase))
             {
                 SelectDrive(drive);
             }
         }
-
+        
+        // This is just a fallback so even if a system drive isn't found the first scanned drive is selected as default.
         if (_selectedDrive is null && drives.Count > 0)
         {
             SelectDrive(drives[0]);
         }
+
+        DriveMenu.Items.Add(new Separator());
+
+        var selectFolderItem = new MenuItem
+        {
+            Header = "Select a Folder"
+        };
+
+        selectFolderItem.Click += SelectFolderMenuItem_OnClick; // += operator is used to add a handler to an event.
+        DriveMenu.Items.Add(selectFolderItem);
     }
 
     private void DriveMenuItem_OnClick(object sender, System.Windows.RoutedEventArgs e)
@@ -107,11 +123,55 @@ public partial class MainWindow
     private void SelectDrive(DriveDetails drive)
     {
         _selectedDrive = drive;
+        _selectedScanPath = drive.RootPath;
+        _isFolderScan = false;
         DriveDropDownButton.Content = GetDriveDisplayName(drive);
 
+        UpdateDriveSummary(drive);
+    }
+
+    private void SelectFolderMenuItem_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        // This opens the windows file explorer and prompts the user to select a folder to scan.
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select a Folder to Scan"
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        string? rootPath = Path.GetPathRoot(dialog.FolderName);
+        
+        // This checks the root of the selected folder to find what drive it belongs to.
+        DriveDetails? drive = _drives
+            .Where(item => string.Equals(item.RootPath, rootPath, StringComparison.OrdinalIgnoreCase))
+            .Select(item => (DriveDetails?)item)
+            .FirstOrDefault();
+
+        // NOTE: BETTER EXCEPTION HANDLING MAY BE NEEDED HERE.
+        // If the selected folders root doesn't match with a recognized drive, we return.
+        if (drive is not { } selectedDrive)
+        {
+            return;
+        }
+
+        _selectedDrive = selectedDrive;
+        _selectedScanPath = dialog.FolderName;
+        _isFolderScan = true;
+        DriveDropDownButton.Content = $"Folder: {dialog.FolderName}";
+        
+        // The drive summary UI is updated to the selected folders root drive.
+        UpdateDriveSummary(selectedDrive);
+    }
+
+    private void UpdateDriveSummary(DriveDetails drive)
+    {
         long usedSpace = drive.TotalSize - drive.AvailableFreeSpace;
 
-        SelectedDriveTextBlock.Text = $"{drive.RootPath}";
+        SelectedDriveTextBlock.Text = drive.RootPath;
         TotalSpaceTextBlock.Text = $"{FormatBytes(drive.TotalSize)}";
         UsedSpaceTextBlock.Text = $"{FormatBytes(usedSpace)} (%{GetPercentage(usedSpace, drive.TotalSize)})";
         FreeSpaceTextBlock.Text = $"{FormatBytes(drive.AvailableFreeSpace)} (%{GetPercentage(drive.AvailableFreeSpace, drive.TotalSize)})";
@@ -148,41 +208,43 @@ public partial class MainWindow
 
     private void SetScanPercentage(double percentage)
     {
-        _scanPercentage = Math.Clamp(percentage, 0, 100);
-        ScanProgressBar.Width = DriveDropDownButton.ActualWidth * _scanPercentage / 100;
-    }
-
-    private void DriveDropDownButton_OnSizeChanged(
-        object sender,
-        System.Windows.SizeChangedEventArgs e)
-    {
-        SetScanPercentage(_scanPercentage);
+        ScanProgressBar.Width = Math.Clamp(percentage, 0, 100) * 2.8;
     }
 
     private async void ScanButton_OnClick(object sender, System.Windows.RoutedEventArgs e)
     {
-        if (_selectedDrive is not { } drive)
+        if (_selectedDrive is not { } drive || _selectedScanPath is not { } scanPath)
         {
             return;
         }
 
         long usedSpace = drive.TotalSize - drive.AvailableFreeSpace;
-        var progress = new Progress<long>(scannedBytes =>
+        var progress = new Progress<ScanProgress>(scanProgress =>
         {
-            double percentage = usedSpace == 0
-                ? 0
-                : scannedBytes * 100d / usedSpace;
+            if (!_isFolderScan)
+            {
+                double percentage = usedSpace == 0
+                    ? 0
+                    : scanProgress.ScannedBytes * 100d / usedSpace;
 
-            SetScanPercentage(percentage);
+                SetScanPercentage(percentage);
+            }
+
+            ExplorerPlaceholder.Text = $"Scanning Files: {scanProgress.ScannedFileCount:N0} scanned.";
         });
 
         DriveDropDownButton.IsEnabled = false;
         ScanButton.IsEnabled = false;
         SetScanPercentage(0);
+        ExplorerPlaceholder.Text = "Scanning Files: 0 scanned.";
+        ExplorerPlaceholder.Visibility = System.Windows.Visibility.Visible;
+        ExplorerResultsTree.Visibility = System.Windows.Visibility.Collapsed;
 
         try
         {
-            await Task.Run(() => _scanner.ScanDirectory(drive.RootPath, progress));
+            // Since we have to pass a method to Task.Run for it to work properly, we use a lambda function to avoid defining a method just for this.
+            ScanResult result = await Task.Run(() => _scanner.ScanDirectory(scanPath, progress));
+            ShowScanResults(result, usedSpace);
             SetScanPercentage(100);
         }
         finally
@@ -191,4 +253,76 @@ public partial class MainWindow
             ScanButton.IsEnabled = true;
         }
     }
+
+    private void ShowScanResults(ScanResult result, long usedSpace)
+    {
+        var entriesByParent = result.Entries
+            .Select((entry, index) => new IndexedEntry(index, entry))
+            .Where(indexedEntry => !indexedEntry.Entry.IsHidden)
+            .ToLookup(indexedEntry => indexedEntry.Entry.ParentIndex); // This groups files by ParentIndex which is defined in Win32Scanner.cs.
+        
+        // The ParentIndex 0 represents the files and folders that are directly in the root directory.
+        var roots = entriesByParent[0]
+            .OrderByDescending(indexedEntry => indexedEntry.Entry.Size)
+            .Select(indexedEntry => CreateExplorerNode(
+                indexedEntry,
+                entriesByParent,
+                result,
+                usedSpace,
+                depth: 0))
+            .ToList();
+
+        ExplorerResultsTree.ItemsSource = roots;
+        ExplorerPlaceholder.Visibility = System.Windows.Visibility.Collapsed;
+        ExplorerResultsTree.Visibility = System.Windows.Visibility.Visible;
+    }
+
+    private ExplorerNode CreateExplorerNode(
+        IndexedEntry indexedEntry,
+        ILookup<int, IndexedEntry> entriesByParent,
+        ScanResult result,
+        long usedSpace,
+        int depth)
+    {
+        var children = entriesByParent[indexedEntry.Index]
+            .OrderByDescending(child => child.Entry.Size)
+            
+            // Child entries are made until the max depth is reached using recursion.
+            .Select(child => CreateExplorerNode(
+                child,
+                entriesByParent,
+                result,
+                usedSpace,
+                depth + 1))
+            .ToList();
+
+        FileEntry entry = indexedEntry.Entry;
+
+        return new ExplorerNode(
+            entry.Name,
+            FormatBytes(entry.Size),
+            $"{GetPercentage(entry.Size, GetPercentageDenominator(result, entry, usedSpace))}%",
+            GetEntryExtension(entry),
+            new System.Windows.Thickness(depth * 16, 0, 0, 0), // This is the indent I had to manually do since TreeView indents all columns by default.
+            children);
+    }
+
+    private long GetPercentageDenominator(ScanResult result, FileEntry entry, long usedSpace)
+    {
+        return entry.ParentIndex == 0 && !_isFolderScan
+            ? usedSpace
+            : result.Entries[entry.ParentIndex].Size;
+    }
+
+    private static string GetEntryExtension(FileEntry entry)
+    {
+        if (entry.IsDirectory)
+        {
+            return "Folder";
+        }
+
+        string extension = Path.GetExtension(entry.Name);
+        return string.IsNullOrEmpty(extension) ? "-" : extension;
+    }
+
 }
