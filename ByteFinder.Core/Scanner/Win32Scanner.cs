@@ -38,10 +38,11 @@ public class Win32Scanner
     }
 
     // Same performance improvement can be done on this method as well.
-    public ScanResult ScanDirectory(string path, IProgress<long>? progress = null)
+    public ScanResult ScanDirectory(string path, IProgress<ScanProgress>? progress = null)
     {
         var result = new ScanResult();
         long scannedBytes = 0;
+        int scannedFileCount = 0;
         long lastReportedBytes = 0;
         var progressTimer = Stopwatch.StartNew();
         
@@ -60,6 +61,7 @@ public class Win32Scanner
             result,
             progress,
             ref scannedBytes,
+            ref scannedFileCount,
             ref lastReportedBytes,
             progressTimer);
 
@@ -68,7 +70,7 @@ public class Win32Scanner
             Size = rootSize
         };
 
-        progress?.Report(scannedBytes);
+        progress?.Report(new ScanProgress(scannedBytes, scannedFileCount));
         
         return result;
     }
@@ -79,8 +81,9 @@ public class Win32Scanner
         string path,
         int parentIndex,
         ScanResult result,
-        IProgress<long>? progress,
+        IProgress<ScanProgress>? progress,
         ref long scannedBytes,
+        ref int scannedFileCount,
         ref long lastReportedBytes,
         Stopwatch progressTimer)
     {
@@ -92,6 +95,7 @@ public class Win32Scanner
                 out var nonDirectorySize,
                 progress,
                 ref scannedBytes,
+                ref scannedFileCount,
                 ref lastReportedBytes,
                 progressTimer);
         
@@ -105,6 +109,7 @@ public class Win32Scanner
                 result,
                 progress,
                 ref scannedBytes,
+                ref scannedFileCount,
                 ref lastReportedBytes,
                 progressTimer);
 
@@ -124,8 +129,9 @@ public class Win32Scanner
         int parentIndex, 
         ScanResult result,
         out long nonDirectorySize,
-        IProgress<long>? progress,
+        IProgress<ScanProgress>? progress,
         ref long scannedBytes,
+        ref int scannedFileCount,
         ref long lastReportedBytes,
         Stopwatch progressTimer)
     {
@@ -197,12 +203,13 @@ public class Win32Scanner
             {
                 nonDirectorySize += size;
                 scannedBytes += size;
+                scannedFileCount++;
 
                 if (progress is not null &&
                     (scannedBytes - lastReportedBytes >= 4 * 1024 * 1024 ||
                      progressTimer.ElapsedMilliseconds >= 100))
                 {
-                    progress.Report(scannedBytes);
+                    progress.Report(new ScanProgress(scannedBytes, scannedFileCount));
                     lastReportedBytes = scannedBytes;
                     progressTimer.Restart();
                 }
