@@ -414,7 +414,8 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0" Margin="{Binding NameIndent}">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="22"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
                                             <ToggleButton Width="16"
@@ -440,6 +441,29 @@
                                                 </ToggleButton.Template>
                                             </ToggleButton>
                                             <TextBlock Grid.Column="1"
+                                                       FontFamily="Segoe Fluent Icons"
+                                                       FontSize="16"
+                                                       Foreground="#FFF2F2F2"
+                                                       Text="&#xE8B7;"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       FontFamily="Segoe Fluent Icons"
+                                                       FontSize="16"
+                                                       Foreground="#FFF2F2F2"
+                                                       Text="&#xE729;"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="2"
                                                        Text="{Binding Name}"
                                                        Foreground="#FFF2F2F2"
                                                        TextTrimming="CharacterEllipsis"

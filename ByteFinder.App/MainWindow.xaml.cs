@@ -303,6 +303,7 @@ public partial class MainWindow
             FormatBytes(entry.Size),
             $"{GetPercentage(entry.Size, GetPercentageDenominator(result, entry, usedSpace))}%",
             GetEntryExtension(entry),
+            entry.IsDirectory,
             new System.Windows.Thickness(depth * 16, 0, 0, 0), // This is the indent I had to manually do since TreeView indents all columns by default.
             children);
     }
