@@ -6,6 +6,7 @@ public sealed record ExplorerNode(
     string OccupiedPercentage,
     string Extension,
     bool IsDirectory,
+    int FileIndex,
     System.Windows.Thickness NameIndent,
     IReadOnlyList<ExplorerNode> Children)
 {
