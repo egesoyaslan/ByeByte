@@ -3,6 +3,11 @@ using ByteFinder.Core.Types;
 using ByteFinder.App.Types;
 using System.Windows.Controls;
 using System.IO;
+using System.Windows.Media;
+using System.Drawing;
+using DrawingIcon = System.Drawing.Icon;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 
 namespace ByteFinder.App;
 
@@ -16,6 +21,7 @@ public partial class MainWindow
     private DriveDetails? _selectedDrive;
     private string? _selectedScanPath;
     private bool _isFolderScan;
+    private ScanResult? _scanResult;
 
     public MainWindow()
     {
@@ -244,6 +250,7 @@ public partial class MainWindow
         {
             // Since we have to pass a method to Task.Run for it to work properly, we use a lambda function to avoid defining a method just for this.
             ScanResult result = await Task.Run(() => _scanner.ScanDirectory(scanPath, progress));
+            _scanResult = result;
             ShowScanResults(result, usedSpace);
             SetScanPercentage(100);
         }
@@ -277,6 +284,20 @@ public partial class MainWindow
         ExplorerResultsTree.Visibility = System.Windows.Visibility.Visible;
     }
 
+    private void ExplorerResultsTree_OnSelectedItemChanged(
+        object sender,
+        System.Windows.RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (_scanResult is null || e.NewValue is not ExplorerNode node)
+        {
+            return;
+        }
+
+        string fullPath = _scanResult.GetFullPath(node.FileIndex);
+        
+        SelectedEntryIcon.Source = GetEntryIcon(fullPath); 
+    }
+
     private ExplorerNode CreateExplorerNode(
         IndexedEntry indexedEntry,
         ILookup<int, IndexedEntry> entriesByParent,
@@ -304,6 +325,7 @@ public partial class MainWindow
             $"{GetPercentage(entry.Size, GetPercentageDenominator(result, entry, usedSpace))}%",
             GetEntryExtension(entry),
             entry.IsDirectory,
+            indexedEntry.Index,
             new System.Windows.Thickness(depth * 16, 0, 0, 0), // This is the indent I had to manually do since TreeView indents all columns by default.
             children);
     }
@@ -324,6 +346,22 @@ public partial class MainWindow
 
         string extension = Path.GetExtension(entry.Name);
         return string.IsNullOrEmpty(extension) ? "-" : extension;
+    }
+
+    private static ImageSource? GetEntryIcon(string fullPath)
+    {
+        using Icon? icon = DrawingIcon.ExtractAssociatedIcon(fullPath); // using directive so we dispose of the image after.
+        
+        if (icon is null)
+            return null;
+        
+        var image = Imaging.CreateBitmapSourceFromHIcon(
+        icon.Handle,
+        System.Windows.Int32Rect.Empty,
+        BitmapSizeOptions.FromWidthAndHeight(64, 64));
+
+        image.Freeze();
+        return image;
     }
 
 }

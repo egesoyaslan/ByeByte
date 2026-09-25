@@ -373,6 +373,7 @@
                                   FontSize="12"
                                   BorderThickness="0"
                                   Padding="0"
+                                  SelectedItemChanged="ExplorerResultsTree_OnSelectedItemChanged"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <TreeView.Resources>
                                 <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -560,9 +561,16 @@
                                    Margin="4,0,0,0"/>
                         
                         <Border Grid.Row="1"
-                                Grid.Column="0"
                                 Height="1"
                                 Background="#E0454545"/>
+                        
+                        <Image x:Name="SelectedEntryIcon"
+                               Grid.Row="2"
+                               Width="64"
+                               Height="64"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Center"
+                               Margin="0,24,0,0"/>
                     </Grid>
                 </Border>
             </Grid>
