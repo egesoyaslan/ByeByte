@@ -294,8 +294,10 @@ public partial class MainWindow
         }
 
         string fullPath = _scanResult.GetFullPath(node.FileIndex);
-        
-        SelectedEntryIcon.Source = GetEntryIcon(fullPath); 
+
+        SelectedEntryIcon.Source = node.IsDirectory
+            ? GetPngIcon(Path.Combine(AppContext.BaseDirectory, "assets", "png", "yellow.png"))
+            : GetEntryIcon(fullPath);
     }
 
     private ExplorerNode CreateExplorerNode(
@@ -350,18 +352,44 @@ public partial class MainWindow
 
     private static ImageSource? GetEntryIcon(string fullPath)
     {
-        using Icon? icon = DrawingIcon.ExtractAssociatedIcon(fullPath); // using directive so we dispose of the image after.
+        try // File may be deleted by the time we try to fetch icon.
+        {
+            using Icon? icon = DrawingIcon.ExtractAssociatedIcon(fullPath); // using directive so we dispose of the image after.
+            
+            if (icon is null)
+                return null;
         
-        if (icon is null)
+            var image = Imaging.CreateBitmapSourceFromHIcon(
+                icon.Handle,
+                System.Windows.Int32Rect.Empty,
+                BitmapSizeOptions.FromWidthAndHeight(64, 64));
+
+            image.Freeze();
+            return image;
+        }
+        catch (FileNotFoundException)
+        {
             return null;
-        
-        var image = Imaging.CreateBitmapSourceFromHIcon(
-        icon.Handle,
-        System.Windows.Int32Rect.Empty,
-        BitmapSizeOptions.FromWidthAndHeight(64, 64));
-
-        image.Freeze();
-        return image;
+        }
     }
+    
+    private static ImageSource? GetPngIcon(string pngPath)
+    {
+        try
+        {
+            var image = new BitmapImage();
 
+            image.BeginInit();
+            image.UriSource = new Uri(pngPath, UriKind.Absolute);
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.EndInit();
+
+            image.Freeze();
+            return image;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
 }
