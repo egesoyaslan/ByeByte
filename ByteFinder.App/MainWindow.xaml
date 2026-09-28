@@ -564,13 +564,73 @@
                                 Height="1"
                                 Background="#E0454545"/>
                         
-                        <Image x:Name="SelectedEntryIcon"
-                               Grid.Row="2"
-                               Width="64"
-                               Height="64"
-                               VerticalAlignment="Top"
-                               HorizontalAlignment="Center"
-                               Margin="0,24,0,0"/>
+                        <Grid Grid.Row="2">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Source, ElementName=SelectedEntryIcon}"
+                                                     Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Image x:Name="SelectedEntryIcon"
+                                   Grid.Row="0"
+                                   Grid.Column="0"
+                                   Width="32"
+                                   Height="32"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Left"
+                                   Margin="4,12,12,12"/>
+                            
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="1"
+                                       Foreground="#FFF2F2F2"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding SelectedItem.Name, ElementName=ExplorerResultsTree}"
+                                       Margin="0,0,8,0"
+                                       FontSize="12"/>
+                            
+                            <Border Grid.ColumnSpan="2"
+                                    Grid.Column="0"
+                                    Grid.Row="1"
+                                    Height="1"
+                                    Background="#A0454545"
+                                    Margin="-8,0,-8,0"/>
+                            
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="0"
+                                       Text="Full Path:"
+                                       FontSize="12"
+                                       Margin="4,12,4,12"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Left"/>
+                            
+                            <TextBlock x:Name="SelectedEntryFullPath"
+                                       Grid.Row="2"
+                                       Grid.Column="1"
+                                       FontSize="12"
+                                       FontWeight="Light"
+                                       Margin="4,12,8,12"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Left"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </Grid>
                     </Grid>
                 </Border>
             </Grid>

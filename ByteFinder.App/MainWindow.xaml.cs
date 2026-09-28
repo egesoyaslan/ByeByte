@@ -295,6 +295,7 @@ public partial class MainWindow
 
         string fullPath = _scanResult.GetFullPath(node.FileIndex);
 
+        SelectedEntryFullPath.Text = fullPath;
         SelectedEntryIcon.Source = node.IsDirectory
             ? GetPngIcon(Path.Combine(AppContext.BaseDirectory, "assets", "png", "yellow.png"))
             : GetEntryIcon(fullPath);
@@ -362,7 +363,7 @@ public partial class MainWindow
             var image = Imaging.CreateBitmapSourceFromHIcon(
                 icon.Handle,
                 System.Windows.Int32Rect.Empty,
-                BitmapSizeOptions.FromWidthAndHeight(64, 64));
+                BitmapSizeOptions.FromWidthAndHeight(32, 32));
 
             image.Freeze();
             return image;
