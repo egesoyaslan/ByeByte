@@ -30,6 +30,26 @@ public partial class MainWindow
         PopulateDriveMenu(_scanner.GetReadyDrives());
     }
 
+    private void Window_OnPreviewMouseLeftButtonDown(
+        object sender,
+        System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (!SelectedEntryFullPath.IsMouseOver &&
+            (CopyFullPathPopup.IsOpen || SelectedEntryFullPath.IsFocused))
+        {
+            ClearFullPathInteraction();
+        }
+    }
+
+    private void ClearFullPathInteraction()
+    {
+        CopyFullPathPopup.IsOpen = false;
+        SelectedEntryFullPath.IsHitTestVisible = true;
+        SelectedEntryFullPath.Select(0, 0);
+        System.Windows.Input.FocusManager.SetFocusedElement(this, null);
+        System.Windows.Input.Keyboard.ClearFocus();
+    }
+
     private void TitleBar_OnMouseLeftButtonDown(
         object sender,
         System.Windows.Input.MouseButtonEventArgs e)
@@ -295,10 +315,35 @@ public partial class MainWindow
 
         string fullPath = _scanResult.GetFullPath(node.FileIndex);
 
+        CopyFullPathPopup.IsOpen = false;
+        SelectedEntryFullPath.IsHitTestVisible = true;
         SelectedEntryFullPath.Text = fullPath;
+        SelectedEntryFullPath.Select(0, 0);
+        SelectedEntryFullPath.ScrollToHome();
         SelectedEntryIcon.Source = node.IsDirectory
             ? GetPngIcon(Path.Combine(AppContext.BaseDirectory, "assets", "png", "yellow.png"))
             : GetEntryIcon(fullPath);
+    }
+
+    private void SelectedEntryFullPath_OnPreviewMouseLeftButtonUp(
+        object sender,
+        System.Windows.Input.MouseButtonEventArgs e)
+    {
+        SelectedEntryFullPath.Focus();
+        SelectedEntryFullPath.SelectAll();
+        CopyFullPathPopup.IsOpen = true;
+        SelectedEntryFullPath.IsHitTestVisible = false;
+    }
+
+    private void CopyFullPathButton_OnClick(
+        object sender,
+        System.Windows.RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedEntryFullPath.Text))
+        {
+            System.Windows.Clipboard.SetText(SelectedEntryFullPath.Text);
+            ClearFullPathInteraction();
+        }
     }
 
     private ExplorerNode CreateExplorerNode(
