@@ -16,6 +16,7 @@
                  WindowBackdropType="Acrylic"
                  ExtendsContentIntoTitleBar="True"
                  StateChanged="Window_OnStateChanged"
+                 PreviewMouseLeftButtonDown="Window_OnPreviewMouseLeftButtonDown"
                  Foreground="#FFF2F2F2">
     <Window.Resources>
         <Style x:Key="CloseButton" TargetType="Button">
@@ -621,15 +622,50 @@
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Left"/>
                             
-                            <TextBlock x:Name="SelectedEntryFullPath"
-                                       Grid.Row="2"
-                                       Grid.Column="1"
-                                       FontSize="12"
-                                       FontWeight="Light"
-                                       Margin="4,12,8,12"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Left"
-                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBox x:Name="SelectedEntryFullPath"
+                                     Grid.Row="2"
+                                     Grid.Column="1"
+                                     IsReadOnly="True"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     Foreground="#FFF2F2F2"
+                                     FontSize="12"
+                                     FontWeight="Light"
+                                     Margin="0,12,4,12"
+                                     Padding= "2,5,2,6"
+                                     VerticalContentAlignment="Center"
+                                     TextWrapping="NoWrap"
+                                     PreviewMouseLeftButtonUp="SelectedEntryFullPath_OnPreviewMouseLeftButtonUp"/>
+
+                            <Popup x:Name="CopyFullPathPopup"
+                                   PlacementTarget="{Binding ElementName=SelectedEntryFullPath}"
+                                   Placement="Top"
+                                   VerticalOffset="-4"
+                                   StaysOpen="False"
+                                   AllowsTransparency="True"
+                                   PopupAnimation="Fade">
+                                <Border Background="#FF2A2A2A"
+                                        BorderBrush="#E0454545"
+                                        BorderThickness="1"
+                                        CornerRadius="5"
+                                        Padding="2">
+                                    <Button Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="7,4"
+                                            ToolTip="Copy full path"
+                                            Click="CopyFullPathButton_OnClick">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock FontFamily="Segoe Fluent Icons"
+                                                       FontSize="13"
+                                                       Text="&#xE8C8;"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Margin="5,0,0,0"
+                                                       Text="Copy"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                            </Popup>
                         </Grid>
                     </Grid>
                 </Border>
