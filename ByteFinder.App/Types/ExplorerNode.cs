@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace ByteFinder.App.Types;
 
 public sealed record ExplorerNode(
@@ -8,7 +10,7 @@ public sealed record ExplorerNode(
     bool IsDirectory,
     int FileIndex,
     System.Windows.Thickness NameIndent,
-    IReadOnlyList<ExplorerNode> Children)
+    ObservableCollection<ExplorerNode> Children)
 {
     public bool HasChildren => Children.Count > 0;
 }

@@ -56,11 +56,16 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 
+# Local AI setup
+/.agents/
+/docs/agents/
+/skills-lock.json
+.aiassistant/
+AGENTS.md
+
 bin/
 obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-.aiassistant/
-AGENTS.md
 ByteFinder.App/TODO.md

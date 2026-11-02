@@ -5,6 +5,9 @@ using System.Windows.Controls;
 using System.IO;
 using System.Windows.Media;
 using System.Drawing;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using Microsoft.VisualBasic.FileIO;
 using DrawingIcon = System.Drawing.Icon;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
@@ -22,6 +25,7 @@ public partial class MainWindow
     private string? _selectedScanPath;
     private bool _isFolderScan;
     private ScanResult? _scanResult;
+    private ObservableCollection<ExplorerNode> _rootNodes = [];
 
     public MainWindow()
     {
@@ -289,17 +293,16 @@ public partial class MainWindow
             .ToLookup(indexedEntry => indexedEntry.Entry.ParentIndex); // This groups files by ParentIndex which is defined in Win32Scanner.cs.
         
         // The ParentIndex 0 represents the files and folders that are directly in the root directory.
-        var roots = entriesByParent[0]
+        _rootNodes = new ObservableCollection<ExplorerNode>(entriesByParent[0]
             .OrderByDescending(indexedEntry => indexedEntry.Entry.Size)
             .Select(indexedEntry => CreateExplorerNode(
                 indexedEntry,
                 entriesByParent,
                 result,
                 usedSpace,
-                depth: 0))
-            .ToList();
+                depth: 0)));
 
-        ExplorerResultsTree.ItemsSource = roots;
+        ExplorerResultsTree.ItemsSource = _rootNodes;
         ExplorerPlaceholder.Visibility = System.Windows.Visibility.Collapsed;
         ExplorerResultsTree.Visibility = System.Windows.Visibility.Visible;
     }
@@ -323,6 +326,8 @@ public partial class MainWindow
         SelectedEntryIcon.Source = node.IsDirectory
             ? GetPngIcon(Path.Combine(AppContext.BaseDirectory, "assets", "png", "yellow.png"))
             : GetEntryIcon(fullPath);
+        DeleteSelectedEntryButton.IsEnabled = true;
+        ShowInExplorerButton.IsEnabled = true;
     }
 
     private void SelectedEntryFullPath_OnPreviewMouseLeftButtonUp(
@@ -346,6 +351,128 @@ public partial class MainWindow
         }
     }
 
+    private void ShowInExplorerButton_OnClick(
+        object sender,
+        System.Windows.RoutedEventArgs e)
+    {
+        if (!TryGetSelectedEntry(out _, out string fullPath))
+        {
+            return;
+        }
+
+        if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "The selected item no longer exists.",
+                "Show in Explorer",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{fullPath}\"")
+        {
+            UseShellExecute = true
+        });
+    }
+
+    private void DeleteSelectedEntryButton_OnClick(
+        object sender,
+        System.Windows.RoutedEventArgs e)
+    {
+        if (!TryGetSelectedEntry(out ExplorerNode node, out string fullPath))
+        {
+            return;
+        }
+
+        if (!File.Exists(fullPath) && !Directory.Exists(fullPath))
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "The selected item no longer exists.",
+                "Delete",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+            return;
+        }
+
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            $"Move '{node.Name}' to the Recycle Bin?",
+            "Delete",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirmation != System.Windows.MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            if (node.IsDirectory)
+            {
+                FileSystem.DeleteDirectory(
+                    fullPath,
+                    UIOption.OnlyErrorDialogs,
+                    RecycleOption.SendToRecycleBin,
+                    UICancelOption.ThrowException);
+            }
+            else
+            {
+                FileSystem.DeleteFile(
+                    fullPath,
+                    UIOption.OnlyErrorDialogs,
+                    RecycleOption.SendToRecycleBin,
+                    UICancelOption.ThrowException);
+            }
+
+            RemoveExplorerNode(_rootNodes, node);
+            ClearSelectedEntry();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                $"The selected item could not be deleted.\n\n{exception.Message}",
+                "Delete",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    private bool TryGetSelectedEntry(out ExplorerNode node, out string fullPath)
+    {
+        node = ExplorerResultsTree.SelectedItem as ExplorerNode ?? null!;
+        fullPath = SelectedEntryFullPath.Text;
+        return node is not null && !string.IsNullOrWhiteSpace(fullPath);
+    }
+
+    private static bool RemoveExplorerNode(
+        ObservableCollection<ExplorerNode> nodes,
+        ExplorerNode node)
+    {
+        if (nodes.Remove(node))
+        {
+            return true;
+        }
+
+        return nodes.Any(child => RemoveExplorerNode(child.Children, node));
+    }
+
+    private void ClearSelectedEntry()
+    {
+        SelectedEntryFullPath.Clear();
+        SelectedEntryIcon.Source = null;
+        DeleteSelectedEntryButton.IsEnabled = false;
+        ShowInExplorerButton.IsEnabled = false;
+        ClearFullPathInteraction();
+    }
+
     private ExplorerNode CreateExplorerNode(
         IndexedEntry indexedEntry,
         ILookup<int, IndexedEntry> entriesByParent,
@@ -353,7 +480,7 @@ public partial class MainWindow
         long usedSpace,
         int depth)
     {
-        var children = entriesByParent[indexedEntry.Index]
+        var children = new ObservableCollection<ExplorerNode>(entriesByParent[indexedEntry.Index]
             .OrderByDescending(child => child.Entry.Size)
             
             // Child entries are made until the max depth is reached using recursion.
@@ -362,8 +489,7 @@ public partial class MainWindow
                 entriesByParent,
                 result,
                 usedSpace,
-                depth + 1))
-            .ToList();
+                depth + 1)));
 
         FileEntry entry = indexedEntry.Entry;
 
