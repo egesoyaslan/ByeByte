@@ -281,7 +281,7 @@
             <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*" MinWidth="250"/>
                 </Grid.ColumnDefinitions>
                 
                 <Border Grid.Column="0"
@@ -544,7 +544,7 @@
                         Background="#A0111111"
                         Margin="0,0,12,12"
                         CornerRadius="8"
-                        Padding="8,0,8,0"
+                        Padding="8,0,8,8"
                         BorderThickness="1"
                         BorderBrush="#E0454545">
                     <Grid>
@@ -581,6 +581,8 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             
@@ -636,6 +638,56 @@
                                      VerticalContentAlignment="Center"
                                      TextWrapping="NoWrap"
                                      PreviewMouseLeftButtonUp="SelectedEntryFullPath_OnPreviewMouseLeftButtonUp"/>
+
+                            <Grid Grid.Row="4"
+                                  Grid.ColumnSpan="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ui:Button x:Name="DeleteSelectedEntryButton"
+                                           Click="DeleteSelectedEntryButton_OnClick"
+                                           MinWidth="70"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Stretch"
+                                           CornerRadius="6"
+                                           BorderThickness="1"
+                                           BorderBrush="#E0454545"
+                                           PressedBackground="#08FFFFFF"
+                                           PressedBorderBrush="#E0454545"
+                                           MouseOverBorderBrush="#E0454545"
+                                           MouseOverBackground="#15FFFFFF"
+                                           Height="32">
+                                    <TextBlock Text="Delete"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               Foreground="#FFF2F2F2"/>
+                                </ui:Button>
+
+                                <ui:Button x:Name="ShowInExplorerButton"
+                                           Grid.Column="1"
+                                           Margin="8,0,0,0"
+                                           Click="ShowInExplorerButton_OnClick"
+                                           MinWidth="130"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Stretch"
+                                           CornerRadius="6"
+                                           BorderThickness="1"
+                                           BorderBrush="#E0454545"
+                                           PressedBackground="#08FFFFFF"
+                                           PressedBorderBrush="#E0454545"
+                                           MouseOverBorderBrush="#E0454545"
+                                           MouseOverBackground="#15FFFFFF"
+                                           Height="32">
+                                    <TextBlock Text="Show in Explorer"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontSize="12"
+                                               Foreground="#FFF2F2F2"/>
+                                </ui:Button>
+                            </Grid>
 
                             <Popup x:Name="CopyFullPathPopup"
                                    PlacementTarget="{Binding ElementName=SelectedEntryFullPath}"
