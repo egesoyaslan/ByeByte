@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace ByteFinder.Core.Scanner.Win32;
+namespace ByeByte.Core.Scanner.Win32;
 
 internal static class NativeMethods
 {

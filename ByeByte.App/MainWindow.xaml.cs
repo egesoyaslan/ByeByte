@@ -1,6 +1,6 @@
-using ByteFinder.Core.Scanner;
-using ByteFinder.Core.Types;
-using ByteFinder.App.Types;
+using ByeByte.Core.Scanner;
+using ByeByte.Core.Types;
+using ByeByte.App.Types;
 using System.Windows.Controls;
 using System.IO;
 using System.Windows.Media;
@@ -12,7 +12,7 @@ using DrawingIcon = System.Drawing.Icon;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
-namespace ByteFinder.App;
+namespace ByeByte.App;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
