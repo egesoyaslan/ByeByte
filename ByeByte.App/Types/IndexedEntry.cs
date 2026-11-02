@@ -1,5 +1,5 @@
-using ByteFinder.Core.Types;
+using ByeByte.Core.Types;
 
-namespace ByteFinder.App.Types;
+namespace ByeByte.App.Types;
 
 public sealed record IndexedEntry(int Index, FileEntry Entry);

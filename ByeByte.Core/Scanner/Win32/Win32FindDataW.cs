@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace ByteFinder.Core.Scanner.Win32;
+namespace ByeByte.Core.Scanner.Win32;
 
 // This struct represents the native windows WIN32_FIND_DATA_W in C#.
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]

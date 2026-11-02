@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-using ByteFinder.Core.Types;
-using ByteFinder.Core.Scanner.Win32;
+using ByeByte.Core.Types;
+using ByeByte.Core.Scanner.Win32;
 
-namespace ByteFinder.Core.Scanner;
+namespace ByeByte.Core.Scanner;
 
 public class Win32Scanner
 {

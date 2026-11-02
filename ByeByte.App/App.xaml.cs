@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace ByteFinder.App;
+namespace ByeByte.App;
 
 /// <summary>
 /// Interaction logic for App.xaml
