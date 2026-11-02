@@ -69,3 +69,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 ByteFinder.App/TODO.md
+
+# Local IDE settings
+/.idea/
