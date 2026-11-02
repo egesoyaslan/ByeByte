@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32.SafeHandles;
 
-namespace ByteFinder.Core.Scanner.Win32;
+namespace ByeByte.Core.Scanner.Win32;
 
 internal sealed class SafeHandle : SafeHandleZeroOrMinusOneIsInvalid
 {

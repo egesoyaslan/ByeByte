@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace ByteFinder.App.Types;
+namespace ByeByte.App.Types;
 
 public sealed record ExplorerNode(
     string Name,

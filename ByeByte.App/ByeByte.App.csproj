@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ByteFinder.Core\ByteFinder.Core.csproj" />
+      <ProjectReference Include="..\ByeByte.Core\ByeByte.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

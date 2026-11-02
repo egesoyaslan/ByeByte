@@ -1,4 +1,4 @@
-﻿namespace ByteFinder.Core.Types;
+﻿namespace ByeByte.Core.Types;
 
 public readonly record struct FileEntry(
     string Name,

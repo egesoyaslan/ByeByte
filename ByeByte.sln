@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteFinder.App", "ByteFinder.App\ByteFinder.App.csproj", "{D42C0AFC-3330-4697-BBDB-2B4F1F08922D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByeByte.App", "ByeByte.App\ByeByte.App.csproj", "{D42C0AFC-3330-4697-BBDB-2B4F1F08922D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteFinder.Core", "ByteFinder.Core\ByteFinder.Core.csproj", "{97870E05-1357-45AD-A566-0867F7266F41}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByeByte.Core", "ByeByte.Core\ByeByte.Core.csproj", "{97870E05-1357-45AD-A566-0867F7266F41}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,6 +1,6 @@
 ﻿<!-- TO DO: Add dropdown menu to title in title bar that has an about section -->
 
-<ui:FluentWindow x:Class="ByteFinder.App.MainWindow"
+<ui:FluentWindow x:Class="ByeByte.App.MainWindow"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
