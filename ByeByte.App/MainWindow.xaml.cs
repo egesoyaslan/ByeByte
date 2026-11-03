@@ -11,6 +11,7 @@ using Microsoft.VisualBasic.FileIO;
 using DrawingIcon = System.Drawing.Icon;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using System.Runtime.InteropServices;
 
 namespace ByeByte.App;
 
@@ -318,6 +319,11 @@ public partial class MainWindow
 
         string fullPath = _scanResult.GetFullPath(node.FileIndex);
 
+        FileEntry entry = _scanResult.Entries[node.FileIndex];
+        SelectedEntryKind.Text = GetEntryKind(entry);
+        SelectedEntrySize.Text = $"{entry.Size:N0} bytes ({FormatBytes(entry.Size)})";
+        UpdateEntryTimestamps(fullPath, node.IsDirectory);
+
         CopyFullPathPopup.IsOpen = false;
         SelectedEntryFullPath.IsHitTestVisible = true;
         SelectedEntryFullPath.Text = fullPath;
@@ -466,6 +472,10 @@ public partial class MainWindow
 
     private void ClearSelectedEntry()
     {
+        SelectedEntryKind.Text = string.Empty;
+        SelectedEntrySize.Text = string.Empty;
+        SelectedEntryCreated.Text = string.Empty;
+        SelectedEntryModified.Text = string.Empty;
         SelectedEntryFullPath.Clear();
         SelectedEntryIcon.Source = null;
         DeleteSelectedEntryButton.IsEnabled = false;
@@ -521,6 +531,67 @@ public partial class MainWindow
         string extension = Path.GetExtension(entry.Name);
         return string.IsNullOrEmpty(extension) ? "-" : extension;
     }
+
+    private void UpdateEntryTimestamps(string fullPath, bool isDirectory)
+    {
+        SelectedEntryCreated.Text = "Unavailable";
+        SelectedEntryModified.Text = "Unavailable";
+
+        try
+        {
+            FileSystemInfo info = isDirectory ? new DirectoryInfo(fullPath) : new FileInfo(fullPath);
+            info.Refresh();
+            if (!info.Exists)
+            {
+                return;
+            }
+
+            SelectedEntryCreated.Text = info.CreationTime.ToString("F");
+            SelectedEntryModified.Text = info.LastWriteTime.ToString("F");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
+                                         or System.Security.SecurityException)
+        {
+            // The item may have disappeared or become inaccessible since the scan.
+        }
+    }
+
+    private static string GetEntryKind(FileEntry entry)
+    {
+        if (entry.IsDirectory)
+        {
+            return "Folder";
+        }
+
+        const uint typeName = 0x00000400;
+        const uint useFileAttributes = 0x00000010;
+        // Resolve the association without accessing the file or requesting an icon handle.
+        if (SHGetFileInfo(entry.Name, FileAttributes.Normal, out ShellFileInfo info,
+                (uint)Marshal.SizeOf<ShellFileInfo>(), typeName | useFileAttributes) != IntPtr.Zero
+            && !string.IsNullOrWhiteSpace(info.TypeName))
+        {
+            return info.TypeName;
+        }
+
+        string extension = Path.GetExtension(entry.Name);
+        return string.IsNullOrEmpty(extension) ? "File" : $"{extension} file";
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct ShellFileInfo
+    {
+        public IntPtr Icon;
+        public int IconIndex;
+        public uint Attributes;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string DisplayName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+        public string TypeName;
+    }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, EntryPoint = "SHGetFileInfoW")]
+    private static extern IntPtr SHGetFileInfo(
+        string path, FileAttributes attributes, out ShellFileInfo info, uint size, uint flags);
 
     private static ImageSource? GetEntryIcon(string fullPath)
     {
