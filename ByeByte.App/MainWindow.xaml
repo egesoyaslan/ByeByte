@@ -19,6 +19,29 @@
                  PreviewMouseLeftButtonDown="Window_OnPreviewMouseLeftButtonDown"
                  Foreground="#FFF2F2F2">
     <Window.Resources>
+        <Style x:Key="ExplorerColumnDivider" TargetType="GridSplitter">
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="ResizeDirection" Value="Columns"/>
+            <Setter Property="ResizeBehavior" Value="CurrentAndNext"/>
+            <Setter Property="ShowsPreview" Value="False"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Panel.ZIndex" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GridSplitter">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Border Width="1"
+                                    HorizontalAlignment="Right"
+                                    Background="#A0454545"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="CloseButton" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
@@ -291,7 +314,9 @@
                         Padding="8,0,8,0"
                         BorderThickness="1"
                         BorderBrush="#E0454545">
-                    <Grid>
+                    <!-- Had to remove layout rounding because I found that it caused extra width which triggers the CancelResize() of WPF. -->
+                    <Grid x:Name="ExplorerColumnsGrid"
+                          UseLayoutRounding="False">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="35"/>
                             <RowDefinition Height="Auto"/>
@@ -299,10 +324,10 @@
                         </Grid.RowDefinitions>
                         
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="3*" MinWidth="80"/>
+                            <ColumnDefinition Width="1*" MinWidth="90"/>
+                            <ColumnDefinition Width="1*" MinWidth="100"/>
+                            <ColumnDefinition Width="1*" MinWidth="90"/>
                         </Grid.ColumnDefinitions>
                         
                         <TextBlock Grid.Row="0"
@@ -312,13 +337,6 @@
                                    Foreground="#FFF2F2F2"
                                    Text="Name"
                                    Margin="6,0,0,0"/>
-                        <Border Grid.Row="0"
-                                Grid.Column="0"
-                                Width="1"
-                                Height="35"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Background="#A0454545"/>
                         
                         <TextBlock Grid.Row="0"
                                    Grid.Column="1"
@@ -327,13 +345,6 @@
                                    Foreground="#FFF2F2F2"
                                    Text="Size"
                                    Margin="12,0,0,0"/>
-                        <Border Grid.Row="0"
-                                Grid.Column="1"
-                                Width="1"
-                                Height="35"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Background="#A0454545"/>
                         
                         <TextBlock Grid.Row="0"
                                    Grid.Column="2"
@@ -342,13 +353,6 @@
                                    Foreground="#FFF2F2F2"
                                    Text="% Occupied"
                                    Margin="12,0,0,0"/>
-                        <Border Grid.Row="0"
-                                Grid.Column="2"
-                                Width="1"
-                                Height="35"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Background="#A0454545"/>
                         
                         <TextBlock Grid.Row="0"
                                    Grid.Column="3"
@@ -374,6 +378,7 @@
                                   FontSize="12"
                                   BorderThickness="0"
                                   Padding="0"
+                                  Tag="{Binding ElementName=ExplorerColumnsGrid}"
                                   SelectedItemChanged="ExplorerResultsTree_OnSelectedItemChanged"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <TreeView.Resources>
@@ -434,12 +439,17 @@
                             </TreeView.Resources>
                             <TreeView.ItemTemplate>
                                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                    <Grid Height="28">
+                                    <Grid Height="28"
+                                          Width="{Binding Tag.ActualWidth, RelativeSource={RelativeSource AncestorType=TreeView}}">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="3*"/>
-                                            <ColumnDefinition Width="1*"/>
-                                            <ColumnDefinition Width="1*"/>
-                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="{Binding Tag.ColumnDefinitions[0].Width, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                                                              MinWidth="{Binding Tag.ColumnDefinitions[0].MinWidth, RelativeSource={RelativeSource AncestorType=TreeView}}"/>
+                                            <ColumnDefinition Width="{Binding Tag.ColumnDefinitions[1].Width, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                                                              MinWidth="{Binding Tag.ColumnDefinitions[1].MinWidth, RelativeSource={RelativeSource AncestorType=TreeView}}"/>
+                                            <ColumnDefinition Width="{Binding Tag.ColumnDefinitions[2].Width, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                                                              MinWidth="{Binding Tag.ColumnDefinitions[2].MinWidth, RelativeSource={RelativeSource AncestorType=TreeView}}"/>
+                                            <ColumnDefinition Width="{Binding Tag.ColumnDefinitions[3].Width, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                                                              MinWidth="{Binding Tag.ColumnDefinitions[3].MinWidth, RelativeSource={RelativeSource AncestorType=TreeView}}"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0" Margin="{Binding NameIndent}">
                                             <Grid.ColumnDefinitions>
@@ -499,8 +509,8 @@
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,8,0"/>
                                         </Grid>
-                                        <TextBlock Grid.Column="1" Text="{Binding Size}" Foreground="#FFF2F2F2" VerticalAlignment="Center" Margin="12,0,8,0"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding OccupiedPercentage}" Foreground="#FFF2F2F2" VerticalAlignment="Center" Margin="12,0,8,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Size}" Foreground="#FFF2F2F2" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0,8,0"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding OccupiedPercentage}" Foreground="#FFF2F2F2" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0,8,0"/>
                                         <TextBlock Grid.Column="3" Text="{Binding Extension}" Foreground="#FFF2F2F2" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0,8,0"/>
                                     </Grid>
                                 </HierarchicalDataTemplate>
@@ -517,26 +527,18 @@
                                    Text="Scan a drive or folder to view its contents."
                                    Typography.NumeralAlignment="Tabular"/> <!-- Tabular alignment gives evert number the same width and prevents twitching when the file count changes. -->
                         
-                        <Border Grid.Row="2"
-                                Grid.Column="0"
-                                Width="1"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Stretch"
-                                Background="#A0454545"/>
-                        
-                        <Border Grid.Row="2"
-                                Grid.Column="1"
-                                Width="1"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Stretch"
-                                Background="#A0454545"/>
-                        
-                        <Border Grid.Row="2"
-                                Grid.Column="2"
-                                Width="1"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Stretch"
-                                Background="#A0454545"/>
+                        <GridSplitter Grid.RowSpan="3"
+                                      Grid.Column="0"
+                                      Style="{StaticResource ExplorerColumnDivider}"
+                                      AutomationProperties.Name="Resize Name and Size columns"/>
+                        <GridSplitter Grid.RowSpan="3"
+                                      Grid.Column="1"
+                                      Style="{StaticResource ExplorerColumnDivider}"
+                                      AutomationProperties.Name="Resize Size and Percent Occupied columns"/>
+                        <GridSplitter Grid.RowSpan="3"
+                                      Grid.Column="2"
+                                      Style="{StaticResource ExplorerColumnDivider}"
+                                      AutomationProperties.Name="Resize Percent Occupied and Extension columns"/>
                     </Grid>
                 </Border>
                 
