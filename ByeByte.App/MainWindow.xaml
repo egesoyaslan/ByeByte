@@ -19,6 +19,23 @@
                  PreviewMouseLeftButtonDown="Window_OnPreviewMouseLeftButtonDown"
                  Foreground="#FFF2F2F2">
     <Window.Resources>
+        <Style x:Key="ExplorerSortHeader" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#FFF2F2F2"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ExplorerColumnDivider" TargetType="GridSplitter">
             <Setter Property="Width" Value="6"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -330,37 +347,38 @@
                             <ColumnDefinition Width="1*" MinWidth="90"/>
                         </Grid.ColumnDefinitions>
                         
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="0"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"
-                                   Foreground="#FFF2F2F2"
-                                   Text="Name"
-                                   Margin="6,0,0,0"/>
-                        
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="1"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"
-                                   Foreground="#FFF2F2F2"
-                                   Text="Size"
-                                   Margin="12,0,0,0"/>
-                        
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="2"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"
-                                   Foreground="#FFF2F2F2"
-                                   Text="% Occupied"
-                                   Margin="12,0,0,0"/>
-                        
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="3"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"
-                                   Foreground="#FFF2F2F2"
-                                   Text="Extension"
-                                   Margin="12,0,0,0"/>
+                        <Button Grid.Row="0" Grid.Column="0" Margin="6,0,6,0"
+                                Style="{StaticResource ExplorerSortHeader}" Tag="Name"
+                                Click="ExplorerSortHeader_OnClick" AutomationProperties.Name="Sort by Name">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Name"/>
+                                <TextBlock x:Name="NameSortArrow" FontSize="8" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Row="0" Grid.Column="1" Margin="12,0,6,0"
+                                Style="{StaticResource ExplorerSortHeader}" Tag="Size"
+                                Click="ExplorerSortHeader_OnClick" AutomationProperties.Name="Sort by Size">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Size"/>
+                                <TextBlock x:Name="SizeSortArrow" Text="▼" FontSize="8" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Row="0" Grid.Column="2" Margin="12,0,6,0"
+                                Style="{StaticResource ExplorerSortHeader}" Tag="OccupiedPercentage"
+                                Click="ExplorerSortHeader_OnClick" AutomationProperties.Name="Sort by Percent Occupied">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="% Occupied"/>
+                                <TextBlock x:Name="OccupiedSortArrow" FontSize="8" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Row="0" Grid.Column="3" Margin="12,0,0,0"
+                                Style="{StaticResource ExplorerSortHeader}" Tag="Extension"
+                                Click="ExplorerSortHeader_OnClick" AutomationProperties.Name="Sort by Extension">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Extension"/>
+                                <TextBlock x:Name="ExtensionSortArrow" FontSize="8" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                         
                         <Border Grid.Row="1"
                                 Grid.ColumnSpan="4"
@@ -384,6 +402,8 @@
                             <TreeView.Resources>
                                 <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                                 <Style TargetType="TreeViewItem">
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                     <Setter Property="Padding" Value="0"/>
                                     <Setter Property="Margin" Value="0"/>
