@@ -6,6 +6,8 @@ using System.IO;
 using System.Windows.Media;
 using System.Drawing;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Data;
 using System.Diagnostics;
 using Microsoft.VisualBasic.FileIO;
 using DrawingIcon = System.Drawing.Icon;
@@ -27,6 +29,8 @@ public partial class MainWindow
     private bool _isFolderScan;
     private ScanResult? _scanResult;
     private ObservableCollection<ExplorerNode> _rootNodes = [];
+    private string _sortColumn = nameof(ExplorerNode.Size);
+    private ListSortDirection _sortDirection = ListSortDirection.Descending;
 
     public MainWindow()
     {
@@ -295,7 +299,6 @@ public partial class MainWindow
         
         // The ParentIndex 0 represents the files and folders that are directly in the root directory.
         _rootNodes = new ObservableCollection<ExplorerNode>(entriesByParent[0]
-            .OrderByDescending(indexedEntry => indexedEntry.Entry.Size)
             .Select(indexedEntry => CreateExplorerNode(
                 indexedEntry,
                 entriesByParent,
@@ -303,9 +306,69 @@ public partial class MainWindow
                 usedSpace,
                 depth: 0)));
 
+        ApplyExplorerSort(_rootNodes);
         ExplorerResultsTree.ItemsSource = _rootNodes;
         ExplorerPlaceholder.Visibility = System.Windows.Visibility.Collapsed;
         ExplorerResultsTree.Visibility = System.Windows.Visibility.Visible;
+    }
+
+    private void ExplorerSortHeader_OnClick(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string column }) return;
+
+        _sortDirection = column == _sortColumn
+            ? (_sortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending)
+            : column is nameof(ExplorerNode.Name) or nameof(ExplorerNode.Extension)
+                ? ListSortDirection.Ascending
+                : ListSortDirection.Descending;
+        _sortColumn = column;
+
+        // Refreshing a view recreates containers; remember state before any view changes.
+        var expandedNodes = new List<ExplorerNode>();
+        ExplorerNode? selectedNode = ExplorerResultsTree.SelectedItem as ExplorerNode;
+        RememberExpandedNodes(_rootNodes, expandedNodes);
+        ApplyExplorerSort(_rootNodes);
+        foreach (ExplorerNode node in expandedNodes) node.IsExpanded = true;
+        if (selectedNode is not null) selectedNode.IsSelected = true;
+
+        NameSortArrow.Text = _sortColumn == nameof(ExplorerNode.Name) ? SortArrow : string.Empty;
+        SizeSortArrow.Text = _sortColumn == nameof(ExplorerNode.Size) ? SortArrow : string.Empty;
+        OccupiedSortArrow.Text = _sortColumn == nameof(ExplorerNode.OccupiedPercentage) ? SortArrow : string.Empty;
+        ExtensionSortArrow.Text = _sortColumn == nameof(ExplorerNode.Extension) ? SortArrow : string.Empty;
+    }
+
+    private string SortArrow => _sortDirection == ListSortDirection.Ascending ? "▲" : "▼";
+
+    private static void RememberExpandedNodes(
+        ObservableCollection<ExplorerNode> nodes, List<ExplorerNode> expandedNodes)
+    {
+        foreach (ExplorerNode node in nodes)
+        {
+            if (node.IsExpanded) expandedNodes.Add(node);
+            RememberExpandedNodes(node.Children, expandedNodes);
+        }
+    }
+
+    private void ApplyExplorerSort(ObservableCollection<ExplorerNode> nodes)
+    {
+        if (nodes.Count == 0) return;
+
+        var view = (ListCollectionView)CollectionViewSource.GetDefaultView(nodes);
+        view.CustomSort = Comparer<ExplorerNode>.Create((left, right) =>
+        {
+            int comparison = _sortColumn switch
+            {
+                nameof(ExplorerNode.Name) => StringComparer.OrdinalIgnoreCase.Compare(left.Name, right.Name),
+                nameof(ExplorerNode.Extension) => StringComparer.OrdinalIgnoreCase.Compare(left.Extension, right.Extension),
+                _ => left.SizeBytes.CompareTo(right.SizeBytes)
+            };
+            if (_sortDirection == ListSortDirection.Descending) comparison = -comparison;
+            return comparison != 0 ? comparison : StringComparer.OrdinalIgnoreCase.Compare(left.Name, right.Name);
+        });
+
+        foreach (ExplorerNode node in nodes) ApplyExplorerSort(node.Children);
     }
 
     private void ExplorerResultsTree_OnSelectedItemChanged(
@@ -491,7 +554,6 @@ public partial class MainWindow
         int depth)
     {
         var children = new ObservableCollection<ExplorerNode>(entriesByParent[indexedEntry.Index]
-            .OrderByDescending(child => child.Entry.Size)
             
             // Child entries are made until the max depth is reached using recursion.
             .Select(child => CreateExplorerNode(
@@ -511,7 +573,10 @@ public partial class MainWindow
             entry.IsDirectory,
             indexedEntry.Index,
             new System.Windows.Thickness(depth * 16, 0, 0, 0), // This is the indent I had to manually do since TreeView indents all columns by default.
-            children);
+            children)
+        {
+            SizeBytes = entry.Size
+        };
     }
 
     private long GetPercentageDenominator(ScanResult result, FileEntry entry, long usedSpace)
