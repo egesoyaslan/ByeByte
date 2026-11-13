@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Media;
 
 namespace ByeByte.App.Types;
 
@@ -18,6 +19,27 @@ public sealed record ExplorerNode(
 
     public bool HasChildren => Children.Count > 0;
     public long SizeBytes { get; init; }
+
+    public Brush OccupiedPercentageForeground
+    {
+        get
+        {
+            if (!int.TryParse(OccupiedPercentage.TrimEnd('%'), out int percentage))
+                return Brushes.WhiteSmoke;
+
+            percentage = Math.Clamp(percentage, 0, 100);
+            Color green = Color.FromRgb(0x92, 0xF2, 0xA6);
+            Color red = Color.FromRgb(0xFF, 0x91, 0x91);
+            double amount = percentage / 100d;
+
+            var brush = new SolidColorBrush(Color.FromRgb(
+                (byte)Math.Round(green.R + (red.R - green.R) * amount),
+                (byte)Math.Round(green.G + (red.G - green.G) * amount),
+                (byte)Math.Round(green.B + (red.B - green.B) * amount)));
+            brush.Freeze();
+            return brush;
+        }
+    }
 
     public bool IsExpanded
     {
